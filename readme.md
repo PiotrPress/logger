@@ -8,35 +8,58 @@ This library is compatible with [PSR-3](https://github.com/php-fig/fig-standards
 composer require piotrpress/logger
 ```
 
-## Usage
+## Example
 
 ```php
 require __DIR__ . '/vendor/autoload.php';
 
 use PiotrPress\Logger;
+use PiotrPress\Logger\FileHandler;
+use PiotrPress\Logger\ErrorLogHandler;
 
-$logger = new Logger( '/logs/error.log' );
-$logger->error( 'Error example' );
+$logger = new Logger(
+    new FileHandler( __DIR__ . '/' . date( 'Y-m-d' ) . '.log' ),
+    new ErrorLogHandler() 
+);
+    
+$logger->error( '[{module}] Example error', [ 'module' => 'Core' ] );
 ```
 
-Saves: `[2021-03-23 23:15:00] [error] Error example` to file: `/logs/error.log`
+Saves: `[error] [Core] Example error` to file: `{Y-m-d}.log` and sends to PHP error log.
 
-## Format
+## Logger
 
-Logger supports `context` array via constructor and/or log functions optional parameter.
+[Logger](/src/Logger.php) take any number of handlers implementing [HandlerInterface](/src/Handler/HandlerInterface.php) as constructor arguments.
 
-### Defaults:
+## Handlers
 
-* **format**: `"[{date}] [{level}] {message}\n"`
-* **date**: `date( 'Y-m-d G:i:s' )`
-* **level**: log level, with which the method has been called
-* **message**: message, with which the method has been called
+- [ErrorLogHandler](/src/Handler/ErrorLogHandler.php) - send logs to PHP error log.
+- [FileHandler](/src/Handler/FileHandler.php) - send logs to file.
 
-All additional array values, evaluated to string, can be used in `format` via corresponding keys put between a single opening brace `{` and a single closing brace `}`.
+**NOTE:** Both handlers support optional [FormatterInterface](/src/Formatter/FormatterInterface.php) parameter. 
 
-## Log Levels
+## Formatters
 
-Logger supports eight methods to write logs to the eight [RFC 5424](http://tools.ietf.org/html/rfc5424) levels (`debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`) and a ninth method `log`, which accepts a log level as the first argument.
+- [ErrorLogFormatter](/src/Formatter/ErrorLogFormatter.php) - formats [LogRecord](/src/LogRecord.php) using [error_log](/tpl/error_log.php) template.
+- [FileFormatter](/src/Formatter/FileFormatter.php) - formats [LogRecord](/src/LogRecord.php) using [file](/tpl/file.php) template.
+
+**NOTE:** Both formatters support optional path to `template` parameter.
+
+## Levels
+
+Logger supports eight log methods to write logs to the eight [RFC 5424](http://tools.ietf.org/html/rfc5424) levels (`debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`) and a ninth method `log`, which accepts a log level as the first argument.
+
+## Context
+
+All Logger log methods supports optional `context` array parameter.
+
+All additional `context` array values, evaluated to string, can be used in `message` via corresponding keys put between a single opening brace `{` and a single closing brace `}` according to [PSR-3](https://www.php-fig.org/psr/psr-3/#13-context) guidelines.
+
+Context values can be also used in `templates` files as regular PHP variables.
+
+## Requirements
+
+Supports PHP >= `7.4` version.
 
 ## License
 
